@@ -1,0 +1,28 @@
+{
+  "name": "spoketome",
+  "version": "0.1.0",
+  "description": "Pull Notion pages as Markdown via .spoketome files",
+  "type": "module",
+  "bin": {
+    "spoketome": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@notionhq/client": "^2.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "tsup": "^8.0.0",
+    "@types/node": "^20.11.0"
+  }
+}
