@@ -1,15 +1,15 @@
 import { parseArgs } from "node:util";
 import { resolve } from "node:path";
-import { discoverSpoketomeFiles } from "./discovery.js";
+import { discoverSpoketomeFiles, findProjectRoot } from "./discovery.js";
 import { initNotionClient, fetchPage } from "./notion-client.js";
 import { ensureOutputDir, writeMarkdownFile } from "./filesystem.js";
 import { buildContextFile, writeContextFile } from "./context.js";
 import type { CliOptions, PulledPage } from "./types.js";
 import { readFile } from "node:fs/promises";
 
-async function loadEnvFile(): Promise<void> {
+async function loadEnvFile(dir: string): Promise<void> {
   try {
-    const content = await readFile(resolve(".env"), "utf-8");
+    const content = await readFile(resolve(dir, ".env"), "utf-8");
     for (const line of content.split("\n")) {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith("#")) continue;
@@ -74,10 +74,9 @@ function log(opts: CliOptions, ...args: unknown[]): void {
 }
 
 export async function run(): Promise<void> {
-  await loadEnvFile();
   const opts = parseCliArgs();
+  await loadEnvFile(opts.dir);
   const version = await getVersion();
-  const rootDir = resolve(opts.dir);
 
   // 1. Validate NOTION_TOKEN
   const token = process.env.NOTION_TOKEN;
@@ -91,7 +90,8 @@ export async function run(): Promise<void> {
 
   initNotionClient(token);
 
-  // 2. Discover .spoketome files
+  // 2. Find project root and discover .spoketome files
+  const rootDir = await findProjectRoot(resolve(opts.dir), opts.verbose);
   log(opts, `Searching for .spoketome files in ${rootDir}...`);
   const spoketomeFiles = await discoverSpoketomeFiles(rootDir, opts.verbose);
 

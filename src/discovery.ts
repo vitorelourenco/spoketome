@@ -1,9 +1,45 @@
-import { readdir, readFile } from "node:fs/promises";
-import { join, dirname, relative } from "node:path";
+import { readdir, readFile, access } from "node:fs/promises";
+import { join, dirname, relative, parse as parsePath } from "node:path";
 import { extractPageId } from "./notion-url.js";
 import type { SpoketomeFile, SpoketomeEntry } from "./types.js";
 
 const SKIP_DIRS = new Set(["node_modules", ".git", "spoketome"]);
+const ROOT_MARKER = ".spoketomeroot";
+
+/**
+ * Walk up from startDir looking for a .spoketomeroot marker.
+ * Returns the directory containing the marker, or startDir if none found.
+ */
+export async function findProjectRoot(
+  startDir: string,
+  verbose: boolean,
+): Promise<string> {
+  let dir = startDir;
+
+  while (true) {
+    try {
+      await access(join(dir, ROOT_MARKER));
+      if (verbose) {
+        console.log(`Found ${ROOT_MARKER} in ${dir}`);
+      }
+      return dir;
+    } catch {
+      // No marker here, try parent
+    }
+
+    const parent = dirname(dir);
+    if (parent === dir) {
+      // Reached filesystem root without finding marker — stay at startDir
+      if (verbose) {
+        console.log(
+          `No ${ROOT_MARKER} found, using ${startDir} as search root`,
+        );
+      }
+      return startDir;
+    }
+    dir = parent;
+  }
+}
 
 export async function discoverSpoketomeFiles(
   rootDir: string,
