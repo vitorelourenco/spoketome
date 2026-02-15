@@ -7,6 +7,25 @@ import { buildContextFile, writeContextFile } from "./context.js";
 import type { CliOptions, PulledPage } from "./types.js";
 import { readFile } from "node:fs/promises";
 
+async function loadEnvFile(): Promise<void> {
+  try {
+    const content = await readFile(resolve(".env"), "utf-8");
+    for (const line of content.split("\n")) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const eqIdx = trimmed.indexOf("=");
+      if (eqIdx === -1) continue;
+      const key = trimmed.slice(0, eqIdx).trim();
+      const val = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, "");
+      if (!process.env[key]) {
+        process.env[key] = val;
+      }
+    }
+  } catch {
+    // No .env file — that's fine
+  }
+}
+
 async function getVersion(): Promise<string> {
   try {
     const pkg = JSON.parse(
@@ -55,6 +74,7 @@ function log(opts: CliOptions, ...args: unknown[]): void {
 }
 
 export async function run(): Promise<void> {
+  await loadEnvFile();
   const opts = parseCliArgs();
   const version = await getVersion();
   const rootDir = resolve(opts.dir);
