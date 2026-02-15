@@ -1,4 +1,4 @@
-import { mkdir, writeFile, readdir } from "node:fs/promises";
+import { mkdir, writeFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 
 const MAX_FILENAME_LENGTH = 100;
@@ -15,8 +15,9 @@ export function sanitizeFilename(title: string): string {
   return (sanitized || "untitled") + ".md";
 }
 
-export async function ensureOutputDir(dirPath: string): Promise<string> {
+export async function ensureCleanOutputDir(dirPath: string): Promise<string> {
   const outputDir = join(dirPath, "spoketome");
+  await rm(outputDir, { recursive: true, force: true });
   await mkdir(outputDir, { recursive: true });
   return outputDir;
 }
@@ -40,13 +41,4 @@ export async function writeMarkdownFile(
   const filePath = join(outputDir, candidate);
   await writeFile(filePath, content, "utf-8");
   return candidate;
-}
-
-export async function listFiles(dir: string): Promise<string[]> {
-  try {
-    const entries = await readdir(dir);
-    return entries;
-  } catch {
-    return [];
-  }
 }

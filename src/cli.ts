@@ -2,7 +2,7 @@ import { parseArgs } from "node:util";
 import { resolve } from "node:path";
 import { discoverSpoketomeFiles, findProjectRoot } from "./discovery.js";
 import { initNotionClient, fetchPage } from "./notion-client.js";
-import { ensureOutputDir, writeMarkdownFile } from "./filesystem.js";
+import { ensureCleanOutputDir, writeMarkdownFile } from "./filesystem.js";
 import { buildContextFile, writeContextFile } from "./context.js";
 import type { CliOptions, PulledPage } from "./types.js";
 import { readFile } from "node:fs/promises";
@@ -119,7 +119,7 @@ export async function run(): Promise<void> {
       continue;
     }
 
-    const outputDir = await ensureOutputDir(file.dirPath);
+    const outputDir = await ensureCleanOutputDir(file.dirPath);
     const existingFiles = new Set<string>();
     const pulledPages: { pulled: PulledPage; writtenFilename: string }[] = [];
 
